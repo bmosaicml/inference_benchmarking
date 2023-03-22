@@ -22,8 +22,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 local_rank = int(os.getenv("LOCAL_RANK", "0"))
-world_size = torch.cuda.device_count()
-print("World size " + world_size)
+world_size = int(os.getenv('WORLD_SIZE', '1'))
+print(f"World size {world_size}")
 rank = local_rank
 
 
@@ -33,41 +33,11 @@ def print_rank0(*msg):
     print(*msg)
 
 
-
-
-
 def get_world_size() -> int:
     if dist.is_initialized():
         return dist.get_world_size()
     else:
         return 1
-
-
-# balanced_low_0 - because it allows a larger batch size with multiple GPUs
-
-# model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
-
-
-# t_ready = time.time()
-
-
-# ### Generate
-
-# print_rank0(f"*** Starting to generate {num_tokens} tokens with bs={args.batch_size}")
-
-# input_sentences = [
-#     "DeepSpeed is a machine learning framework",
-#     "He is working on",
-#     "He has a",
-#     "He got all",
-#     "Everyone is happy and I can",
-#     "The new movie that got Oscar this year",
-#     "In the far far distance from our galaxy,",
-#     "Peace is the only way",
-# ]
-
-# print_rank0(f"Generate args {generate_kwargs}")
-# inputs = input_sentences[: args.batch_size]
 
 
 def generate(model, inputs, generate_kwargs):
@@ -137,11 +107,10 @@ def make_deepspeed(model, dtype):
 
 if __name__ == "__main__":
     # Arguments: model, dtype, device, inference_engine
-    yaml_path, args_list = sys.argv[1], sys.argv[2:]
+    print(sys.argv)
+    yaml_path = sys.argv[-1]
     with open(yaml_path) as f:
-        yaml_cfg = om.load(f)
-    cli_cfg = om.from_cli(args_list)
-    cfg = DictConfig(om.merge(yaml_cfg, cli_cfg))
+        cfg = om.load(f)
 
     reproducibility.seed_all(cfg.get('seed', 1234))
 

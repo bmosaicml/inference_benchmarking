@@ -1,7 +1,7 @@
 integrations:
 - integration_type: git_repo
   git_repo: bmosaicml/inference_benchmarking
-  git_branch: inference_benchmarking
+  git_branch: main
 
 # We are fetching, converting, and training on the 'val' split
 # as it is small and quick to get going for this demo.
@@ -10,16 +10,16 @@ integrations:
 command: |
   cd inference_benchmarking
   pip install -r requirements.txt
-  composer inference.py /mnt/config/parameters.yaml
+  deepspeed --num_gpus 32 inference.py /mnt/config/parameters.yaml
 image: mosaicml/pytorch:1.13.1_cu117-python3.10-ubuntu20.04
 optimization_level: 0
 
 # Mosaic Cloud will use run_name (with a unique suffix) to populate the env var $COMPOSER_RUN_NAME
 run_name: hf_accelerate
 
-gpu_num: 8
-gpu_type: a100_80gb
-cluster: r1z1
+gpu_num: 32
+gpu_type: a100_40gb
+cluster: r7z2
 
 # The below is injected as a YAML file: /mnt/config/parameters.yaml
 # but is not used in this example.
@@ -34,8 +34,8 @@ parameters:
   model:
     model_name: EleutherAI/gpt-neo-125M
     
-  inference_platform: accelerate
-  dtype: float32 
+  inference_platform: deepspeed
+  dtype: float16 
   num_tokens: 100
   batch_size: 64
 
